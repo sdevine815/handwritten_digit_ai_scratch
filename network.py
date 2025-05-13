@@ -1,3 +1,7 @@
+import struct
+import random
+import math
+
 class NeuralNetwork:
 
   #constructor for the neural network
@@ -19,11 +23,11 @@ class NeuralNetwork:
     self.z1 = [sum(x[i] * self.w1[i][j] for i in range(self.input_size)) + self.b1[j] for j in range(self.hidden_size)]
 
     #activation function
-    self.a1 = [sigmoid(z) for z in self.z1]
+    self.a1 = [self.__sigmoid(z) for z in self.z1]
 
     #activation layer 2
     self.z2 = [sum(self.a1[i] * self.w2[i][j] for i in range(self.hidden_size)) + self.b2[j] for j in range(self.output_size)]
-    self.a2 = [sigmoid(z) for z in self.z2]
+    self.a2 = [self.__sigmoid(z) for z in self.z2]
     
     return self.a2
   
@@ -31,22 +35,23 @@ class NeuralNetwork:
     #1. Feedforward
     #2. Compute error: sigmoid'(z2) * (a2-y)
     #3. Propogate the erros back to hidden layer
+    #4. Updates weights and biases uses lr (learning rate)
     
-    # Forward pass
+    #Forward pass
     self.feedforward(x)
   
-    # Calculate output layer error
-    output_errors = [(self.a2[i] - y[i]) * sigmoid_derivative(self.z2[i]) for i in range(self.output_size)]
+    #Calculate output layer error
+    output_errors = [(self.a2[i] - y[i]) * self.__sigmoid_derivative(self.z2[i]) for i in range(self.output_size)]
     
-    # Calculate hidden layer error
+    #Calculate hidden layer error
     hidden_errors = [
-      sum(output_errors[k] * self.w2[j][k] for k in range(self.output_size)) * sigmoid_derivative(self.z1[j])
+      sum(output_errors[k] * self.w2[j][k] for k in range(self.output_size)) * self.__sigmoid_derivative(self.z1[j])
       for j in range(self.hidden_size)
     ]
   
     # Update weights and biases for w2, b2
     for i in range(self.hidden_size):
-      
+
       for j in range(self.output_size):
         self.w2[i][j] -= lr * output_errors[j] * self.a1[i]
         
@@ -75,3 +80,12 @@ class NeuralNetwork:
   def predict(self, x):
     output = self.feedforward(x)
     return output.index(max(output))
+
+  #sigmoid function represented by 1 / ( 1 + e^-x )
+  def __sigmoid(x):
+    return 1.0 / (1.0 + math.exp(-x))
+  
+  #derivatve of the sigmoid function
+  def __sigmoid_derivative(x):
+    sx = sigmoid(x)
+    return sx * (1 - sx)
